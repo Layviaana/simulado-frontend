@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulado Dinâmico - HTML, CSS & UX Personas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+  <main class="max-w-2xl w-full bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-6 md:p-8">
+    <!-- Cabeçalho -->
+    <header class="border-b border-slate-700 pb-4 mb-6 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-sky-400">Simulado de Revisão</h1>
+        <p class="text-sm text-slate-400">10 Questões Sorteadas a Cada Tentativa</p>
+      </div>
+      <span id="progress-text" class="text-sm font-semibold text-slate-300 bg-slate-700 px-3 py-1 rounded-full">
+        Questão 1 de 10
+      </span>
+    </header>
+
+    <!-- Área da Pergunta -->
+    <section id="quiz-container">
+      <div id="question-text" class="text-lg font-medium mb-6 text-slate-100">
+        <!-- Texto da pergunta -->
+      </div>
+
+      <!-- Opções de Resposta -->
+      <div id="options-container" class="space-y-3 mb-6">
+        <!-- Opções injetadas via JS -->
+      </div>
+
+      <!-- Feedback de Raciocínio -->
+      <div id="rationale-box" class="hidden p-4 rounded-lg mb-6 border text-sm leading-relaxed">
+        <!-- Explicação da resposta -->
+      </div>
+
+      <!-- Ações -->
+      <div class="flex justify-end">
+        <button id="next-btn" onclick="nextQuestion()" disabled class="bg-sky-600 hover:bg-sky-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2 px-6 rounded-lg transition cursor-pointer">
+          Próxima Questão
+        </button>
+      </div>
+    </section>
+
+    <!-- Tela Final de Resultados -->
+    <section id="result-container" class="hidden text-center py-8">
+      <h2 class="text-3xl font-bold text-sky-400 mb-2">Simulado Concluído!</h2>
+      <p class="text-slate-300 mb-6">Confira abaixo o seu desempenho final nesta rodada:</p>
+      
+      <div class="inline-block bg-slate-900 border border-slate-700 rounded-full px-8 py-4 mb-6">
+        <span id="final-score" class="text-4xl font-extrabold text-emerald-400">0/10</span>
+      </div>
+
+      <p id="score-feedback" class="text-slate-400 mb-8 max-w-md mx-auto"></p>
+
+      <button onclick="restartQuiz()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-8 rounded-lg transition cursor-pointer">
+        Refazer (Novas Questões)
+      </button>
+    </section>
+  </main>
+
+  <script>
+    const questionBank = [
+      {
+        question: "Ao criar um avatar circular para uma foto de perfil em uma página web, qual combinação de propriedades CSS é responsável por transformar uma imagem quadrada em um círculo sem distorcer suas proporções visuais?",
+        options: [
+          { text: "border-radius: 50%; e object-fit: cover;", isCorrect: true, rationale: "O 'border-radius: 50%' arredonda os cantos transformando o elemento em círculo, enquanto o 'object-fit: cover' impede que a imagem fique esticada ou achatada." },
+          { text: "border-radius: 100px; e width: 100%;", isCorrect: false, rationale: "Um valor fixo de border-radius não garante um círculo perfeito se o tamanho mudar, e width: 100% apenas ajusta a largura sem tratar o corte da imagem." },
+          { text: "margin: 0; e text-align: center;", isCorrect: false, rationale: "Essas propriedades controlam o alinhamento externo e centralização de texto, sem efeito no formato circular ou proporção da imagem." },
+          { text: "display: flex; e align-items: flex-end;", isCorrect: false, rationale: "Display flex e align-items cuidam do layout flexível e alinhamento vertical dos itens filhos, não da forma da imagem." }
+        ]
+      },
+      {
+        question: "Durante o desenvolvimento Front-End, qual a principal diferença prática de uso entre os atributos id='painel' e class='perfil'?",
+        options: [
+          { text: "O id é reutilizável em múltiplos elementos e o class é exclusivo.", isCorrect: false, rationale: "O conceito está invertido: o 'id' é estritamente único por página, enquanto a 'class' é que é reutilizável." },
+          { text: "O id deve ser único por elemento na página, enquanto o class pode ser compartilhado por vários elementos.", isCorrect: true, rationale: "No HTML, o 'id' funciona como um identificador único de um elemento específico, enquanto a 'class' agrupa vários elementos que compartilham o mesmo estilo CSS." },
+          { text: "O id só funciona no HTML e o class só funciona dentro do arquivo CSS.", isCorrect: false, rationale: "Ambos são atributos nativos do HTML e ambos são selecionados no CSS (# para id e . para class)." },
+          { text: "O id altera a cor de fundo e o class altera a fonte do texto.", isCorrect: false, rationale: "Atributos id e class não possuem estilos visuais próprios; eles apenas identificam os elementos para receberem regras de CSS." }
+        ]
+      },
+      {
+        question: "No contexto da metodologia de UX/UI apresentada no material de Alan Cooper, o que distingue fundamentalmente uma User Persona de uma Buyer Persona?",
+        options: [
+          { text: "A User Persona é a representação fictícia da marca, enquanto a Buyer Persona foca no tráfego do site.", isCorrect: false, rationale: "A representação da personalidade da marca é chamada de Brand Persona, não User Persona." },
+          { text: "A User Persona foca em quem utiliza o software no dia a dia, enquanto a Buyer Persona foca em quem toma a decisão de compra.", isCorrect: true, rationale: "A User Persona representa o usuário final que interage com a interface, enquanto a Buyer Persona representa o cliente que adquire ou paga pelo produto/serviço." },
+          { text: "A User Persona baseia-se apenas em dados demográficos amplos e a Buyer Persona é um protótipo sem pesquisas.", isCorrect: false, rationale: "Dados demográficos amplos definem o Público-Alvo, enquanto o protótipo inicial sem pesquisas profundas é a Proto-Persona." },
+          { text: "A User Persona define as variáveis CSS do sistema e a Buyer Persona estabelece as tags HTML.", isCorrect: false, rationale: "Personas são ferramentas conceituais de design centrado no usuário (UX), não elementos ou comandos de código de programação." }
+        ]
+      },
+      {
+        question: "Qual propriedade CSS é responsável por remover o sublinhado padrão que o navegador aplica automaticamente nos links (<a>)?",
+        options: [
+          { text: "text-align: center;", isCorrect: false, rationale: "Esta propriedade alinha o texto horizontalmente no centro do elemento." },
+          { text: "text-decoration: none;", isCorrect: true, rationale: "O valor 'none' na propriedade 'text-decoration' remove qualquer decoração do texto, incluindo o sublinhado padrão dos elementos <a>." },
+          { text: "font-style: normal;", isCorrect: false, rationale: "Esta propriedade é usada para remover o itálico de um texto, não o sublinhado." },
+          { text: "border: 0;", isCorrect: false, rationale: "A propriedade border controla as bordas da caixa do elemento, não a linha de decoração do texto." }
+        ]
+      },
+      {
+        question: "Ao estruturar um documento HTML5, em qual tag devem ser inseridas as configurações de codificação de caracteres (<meta charset='UTF-8'>) e o título da aba (<title>)?",
+        options: [
+          { text: "<body>", isCorrect: false, rationale: "A tag <body> contém apenas os elementos visíveis na página web para o usuário final." },
+          { text: "<head>", isCorrect: true, rationale: "A tag <head> armazena metadados, instruções técnicas, configurações e links externos que não são renderizados diretamente no corpo visível da página." },
+          { text: "<html>", isCorrect: false, rationale: "Embora fiquem dentro do documento <html>, essas configurações devem obrigatoriamente ser agrupadas dentro do elemento filho <head>." },
+          { text: "<style>", isCorrect: false, rationale: "A tag <style> serve exclusivamente para conter regras e declarações de código CSS interno." }
+        ]
+      },
+      {
+        question: "No desenvolvimento Front-End flexível (Flexbox), qual propriedade CSS é utilizada para distribuir os elementos filhos criando um espaçamento igual entre eles ao longo do eixo principal?",
+        options: [
+          { text: "justify-content: space-between;", isCorrect: true, rationale: "A propriedade 'justify-content: space-between' espalha os itens flexíveis alinhando o primeiro no início, o último no fim e dividindo o espaço restante igualmente entre eles." },
+          { text: "align-items: flex-end;", isCorrect: false, rationale: "Esta propriedade alinha os itens no eixo transversal (vertical por padrão), posicionando-os ao final do contêiner." },
+          { text: "flex-wrap: wrap;", isCorrect: false, rationale: "Esta propriedade permite que os itens quebrem para a linha seguinte caso ultrapassem a largura disponível." },
+          { text: "margin-top: 30px;", isCorrect: false, rationale: "Esta propriedade adiciona um espaçamento externo apenas na parte superior do elemento selecionado." }
+        ]
+      },
+      {
+        question: "Como o uso de Variáveis CSS (:root) auxilia na implementação prática da paleta de cores de um projeto UX/UI?",
+        options: [
+          { text: "Elimina a necessidade de utilizar arquivos HTML durante o desenvolvimento do site.", isCorrect: false, rationale: "O HTML continua sendo indispensável para estruturar o conteúdo do site; as variáveis CSS apenas organizam os estilos." },
+          { text: "Centraliza a definição das cores em um só lugar, permitindo reutilizar e alterar o tema de toda a aplicação de forma rápida.", isCorrect: true, rationale: "Declarar cores em variáveis no :root garante consistência visual, facilita a manutenção e permite mudar a paleta de toda a aplicação alterando apenas um valor." },
+          { text: "Garante automaticamente que o texto atinja 100% de contraste acessível sem precisar testar.", isCorrect: false, rationale: "As variáveis apenas armazenam valores de cores; o desenvolvedor ainda precisa testar se o contraste entre texto e fundo é legível." },
+          { text: "Converte automaticamente arquivos de imagens JPG em código HTML5 puro.", isCorrect: false, rationale: "Variáveis CSS lidam apenas com valores de propriedades de estilização, não com conversão de mídias." }
+        ]
+      },
+      {
+        question: "Para que serve o atributo alt='Foto do portfólio' adicionado a uma tag <img> no HTML?",
+        options: [
+          { text: "Define o caminho do arquivo de imagem salvo na pasta do servidor.", isCorrect: false, rationale: "O caminho do arquivo de imagem é definido pelo atributo 'src' (source)." },
+          { text: "Fornece um texto alternativo para acessibilidade (leitores de tela) ou para exibição caso a imagem falhe ao carregar.", isCorrect: true, rationale: "O atributo 'alt' descreve o conteúdo da imagem para deficientes visuais usando leitores de tela ou quando o arquivo de imagem não pode ser carregado." },
+          { text: "Redimensiona a largura e a altura da foto para caber no layout.", isCorrect: false, rationale: "O tamanho da imagem é controlado por propriedades CSS como width, height ou atributos HTML específicos de dimensão." },
+          { text: "Cria um link clicável que direciona o usuário para o arquivo da imagem.", isCorrect: false, rationale: "Para tornar a imagem clicável como um link, ela deve ser envolvida por uma tag de âncora <a>." }
+        ]
+      },
+      {
+        question: "Qual a diferença entre a propriedade margin e a propriedade padding no CSS?",
+        options: [
+          { text: "Margin cria espaçamento interno (dentro da borda), enquanto Padding cria espaçamento externo (fora da borda).", isCorrect: false, rationale: "Os conceitos estão invertidos: Margin é a margem externa e Padding é o preenchimento interno." },
+          { text: "Margin cria espaçamento externo (fora do elemento), enquanto Padding cria espaçamento interno (entre o conteúdo e a borda).", isCorrect: true, rationale: "No modelo de caixas (Box Model) do CSS, 'margin' empurra outros elementos afastando-os por fora, enquanto 'padding' afasta o conteúdo interno das suas próprias bordas." },
+          { text: "Margin altera a cor do texto e Padding altera a cor do fundo do elemento.", isCorrect: false, rationale: "Espaçamentos não alteram cores; cores são tratadas pelas propriedades 'color' e 'background'." },
+          { text: "Margin funciona apenas em imagens e Padding funciona apenas em títulos <h1>.", isCorrect: false, rationale: "Ambas as propriedades do Box Model aplicam-se a praticamente qualquer elemento HTML de bloco ou em linha estilizado." }
+        ]
+      },
+      {
+        question: "O que a instrução <!DOCTYPE html> no início de um documento indica ao navegador?",
+        options: [
+          { text: "Que a página deve ser traduzida para o idioma português do Brasil automaticamente.", isCorrect: false, rationale: "A declaração de idioma é feita no atributo lang da tag html, como <html lang='pt-BR'>." },
+          { text: "Que a página utiliza a versão HTML5 para ser processada corretamente.", isCorrect: true, rationale: "<!DOCTYPE html> é o pré-requisito padrão do HTML5 que informa ao navegador qual especificação de código ele deve interpretar." },
+          { text: "Que o arquivo é um documento exclusivo de folhas de estilo CSS.", isCorrect: false, rationale: "Arquivos CSS não utilizam DOCTYPE; essa declaração pertence estritamente aos documentos HTML." },
+          { text: "Que todas as imagens da página devem ser carregadas em formato circular.", isCorrect: false, rationale: "Estilos visuais de imagens são controlados via CSS, sem relação com a declaração do tipo de documento." }
+        ]
+      },
+      {
+        question: "Qual o papel do elemento <div> na estrutura do documento HTML?",
+        options: [
+          { text: "Criar um bloco ou divisão genérica para agrupar e organizar elementos.", isCorrect: true, rationale: "A tag <div> funciona como um contêiner neutro para organizar layouts e aplicar estilos em grupo via CSS." },
+          { text: "Inserir uma linha horizontal divisória na tela.", isCorrect: false, rationale: "A linha horizontal divisória é criada pela tag <hr>." },
+          { text: "Vincular um ficheiro de estilo CSS externo ao HTML.", isCorrect: false, rationale: "Vincular ficheiros CSS externos é a função da tag <link> no <head>." },
+          { text: "Definir o título principal do documento.", isCorrect: false, rationale: "O título principal é definido pela tag <h1>." }
+        ]
+      },
+      {
+        question: "Para que serve a tag <hr> no HTML?",
+        options: [
+          { text: "Insere uma linha horizontal para separar conteúdos visualmente.", isCorrect: true, rationale: "A tag <hr> (horizontal rule) desenha uma linha separadora entre seções do documento." },
+          { text: "Cria um link de hipertexto para outra página.", isCorrect: false, rationale: "Links de hipertexto são criados com a tag <a>." },
+          { text: "Define o idioma padrão do documento.", isCorrect: false, rationale: "O idioma é definido pelo atributo lang na tag <html>." },
+          { text: "Aplica um estilo de texto em itálico.", isCorrect: false, rationale: "Itálico é aplicado com tags como <i>, <em> ou via CSS." }
+        ]
+      },
+      {
+        question: "O que representa uma Brand Persona no planejamento de UI/UX e Comunicação?",
+        options: [
+          { text: "A representação da própria personalidade da marca e seus valores.", isCorrect: true, rationale: "A Brand Persona guia o tom de voz, estilo de comunicação e valores da empresa na interação com o público." },
+          { text: "O perfil técnico do desenvolvedor Front-End que construiu o site.", isCorrect: false, rationale: "Brand Persona representa o perfil humanizado da empresa, não da equipe de desenvolvimento." },
+          { text: "Um protótipo inicial sem pesquisas profundas feito antes da Buyer Persona.", isCorrect: false, rationale: "Esse protótipo inicial é chamado de Proto-Persona." },
+          { text: "A persona exclusiva que visita apenas a página de checkout.", isCorrect: false, rationale: "Personas focadas em visitantes de sites são Website Personas ou Buyer Personas dependendo do foco." }
+        ]
+      },
+      {
+        question: "Para que serve o atributo href='#' em uma tag <a>?",
+        options: [
+          { text: "Cria um link provisório que aponta para a própria página atual.", isCorrect: true, rationale: "O caractere '#' serve como um marcador de posição quando o link final ainda não foi definido." },
+          { text: "Abre o link obrigatoriamente em uma nova aba do navegador.", isCorrect: false, rationale: "Abrir em nova aba exige o atributo target='_blank'." },
+          { text: "Carrega o arquivo de estilo CSS no documento.", isCorrect: false, rationale: "Carregar arquivos CSS é feito no elemento <link rel='stylesheet' href='style.css'>" },
+          { text: "Apaga o conteúdo da página quando o usuário clica.", isCorrect: false, rationale: "O símbolo '#' apenas rola a página até o topo caso não haja uma âncora especificada." }
+        ]
+      },
+      {
+        question: "Qual a função da propriedade margin-top: 30px; no CSS?",
+        options: [
+          { text: "Empurrar o elemento 30 pixels para baixo, criando espaço externo no topo.", isCorrect: true, rationale: "margin-top adiciona um espaçamento exterior na parte superior da caixa do elemento." },
+          { text: "Aumentar a altura interna do elemento em 30 pixels.", isCorrect: false, rationale: "Aumentar a altura interna é papel da propriedade padding-top ou height." },
+          { text: "Mudar o tamanho da fonte para 30 pixels.", isCorrect: false, rationale: "O tamanho da fonte é ajustado por font-size." },
+          { text: "Mover o texto para o centro do elemento.", isCorrect: false, rationale: "Centralizar texto é feito com text-align: center." }
+        ]
+      },
+      {
+        question: "Como o criador Alan Cooper definiu a origem e utilidade das personas na década de 1990?",
+        options: [
+          { text: "Como ferramentas formalizadas através de pesquisas para desenvolver software focado no usuário real.", isCorrect: true, rationale: "Alan Cooper formalizou personas para humanizar a tecnologia e garantir que softwares fossem desenhados baseados em necessidades reais." },
+          { text: "Como modelos matemáticos usados para calcular o tempo de carregamento de páginas web.", isCorrect: false, rationale: "Personas são conceitos de UX e design de interação, não métricas de velocidade de servidor." },
+          { text: "Como linhas de código CSS usadas para alterar paletas de cores dinamicamente.", isCorrect: false, rationale: "Personas não são código de programação." },
+          { text: "Como um tipo de banco de dados para armazenar senhas de usuários registrados.", isCorrect: false, rationale: "Personas são arquétipos fictícios de usuários para projeto, não bancos de dados." }
+        ]
+      },
+      {
+        question: "Qual a função da propriedade CSS flex-wrap: wrap;?",
+        options: [
+          { text: "Permitir que itens flexíveis passem para a linha seguinte se não couberem na mesma linha.", isCorrect: true, rationale: "A propriedade flex-wrap com valor 'wrap' habilita a quebra de linha em contêineres Flexbox." },
+          { text: "Forçar todos os elementos a ficarem achatados na mesma linha independente da tela.", isCorrect: false, rationale: "Isso acontece com o valor padrão flex-wrap: nowrap." },
+          { text: "Alinhar todos os itens no final da coluna vertical.", isCorrect: false, rationale: "O alinhamento vertical é feito com align-items ou justify-content dependendo da direção." },
+          { text: "Esconder elementos que ultrapassarem a borda da página.", isCorrect: false, rationale: "Esconder o excesso é papel da propriedade overflow: hidden." }
+        ]
+      },
+      {
+        question: "O que o atributo target='_blank' faz quando adicionado a um link (<a>)?",
+        options: [
+          { text: "Abre o link selecionado em uma nova aba ou janela do navegador.", isCorrect: true, rationale: "target='_blank' instrui o navegador a manter a página atual aberta e carregar o novo endereço em uma aba separada." },
+          { text: "Remove qualquer cor de fundo aplicada ao link.", isCorrect: false, rationale: "Atributos HTML de navegação não alteram estilos visuais de fundo." },
+          { text: "Bloqueia o clique do usuário caso ele esteja usando um celular.", isCorrect: false, rationale: "O atributo funciona da mesma forma em dispositivos móveis e computadores." },
+          { text: "Transforma o texto do link em uma imagem automática.", isCorrect: false, rationale: "Links de texto continuam sendo texto; target apenas define onde o destino será exibido." }
+        ]
+      },
+      {
+        question: "Qual a diferença entre a Proto-Persona e a User Persona tradicional?",
+        options: [
+          { text: "A Proto-Persona é criada antes com base em suposições da equipe, enquanto a User Persona exige pesquisa real com usuários.", isCorrect: true, rationale: "Proto-personas são rascunhos rápidos baseados no conhecimento interno do time; User personas exigem dados empíricos de pesquisa." },
+          { text: "A Proto-Persona serve apenas para backend e a User Persona serve apenas para CSS.", isCorrect: false, rationale: "Ambas são ferramentas conceituais de UX design e não possuem ligação direta com linguagens específicas." },
+          { text: "A Proto-Persona tem foto real e a User Persona usa apenas ilustrações.", isCorrect: false, rationale: "O tipo de imagem usada na ficha de persona não define sua categoria metodológica." },
+          { text: "Não existe diferença; ambos os termos significam exatamente a mesma coisa.", isCorrect: false, rationale: "Existem diferenças metodológicas quanto ao nível de profundidade e embasamento em pesquisas de campo." }
+        ]
+      },
+      {
+        question: "O que a propriedade CSS gap: 20px; faz dentro de um contêiner Flexbox?",
+        options: [
+          { text: "Define o espaço de separação de 20 pixels entre os elementos filhos.", isCorrect: true, rationale: "A propriedade 'gap' estabelece um espaçamento direto entre os itens flexíveis sem precisar aplicar margens individuais." },
+          { text: "Aumentar a espessura da borda externa do contêiner para 20 pixels.", isCorrect: false, rationale: "Espessura de borda é definida com a propriedade border." },
+          { text: "Adiciona um preenchimento interno no topo do contêiner.", isCorrect: false, rationale: "Preenchimento interno é ajustado com padding." },
+          { text: "Diminui o tamanho do texto dentro dos elementos em 20 pixels.", isCorrect: false, rationale: "Tamanho de texto é controlado via font-size." }
+        ]
+      }
+    ];
+
+    let currentQuestions = [];
+    let currentQuestionIdx = 0;
+    let score = 0;
+    let selectedOptionIdx = null;
+
+    function shuffleArray(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function initQuiz() {
+      const shuffledBank = shuffleArray(questionBank);
+      currentQuestions = shuffledBank.slice(0, 10).map(q => {
+        return {
+          question: q.question,
+          options: shuffleArray(q.options)
+        };
+      });
+
+      currentQuestionIdx = 0;
+      score = 0;
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const q = currentQuestions[currentQuestionIdx];
+      
+      document.getElementById('progress-text').textContent = `Questão ${currentQuestionIdx + 1} de ${currentQuestions.length}`;
+      document.getElementById('question-text').textContent = `${currentQuestionIdx + 1}. ${q.question}`;
+
+      const optionsContainer = document.getElementById('options-container');
+      optionsContainer.innerHTML = '';
+      
+      const rationaleBox = document.getElementById('rationale-box');
+      rationaleBox.className = "hidden p-4 rounded-lg mb-6 border text-sm leading-relaxed";
+      rationaleBox.innerHTML = '';
+
+      document.getElementById('next-btn').disabled = true;
+      selectedOptionIdx = null;
+
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = "w-full text-left p-4 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-700/50 transition flex items-start gap-3 cursor-pointer";
+        btn.onclick = () => selectOption(idx);
+        
+        const letter = document.createElement('span');
+        letter.className = "inline-flex items-center justify-center w-6 h-6 rounded-full border border-slate-600 text-xs font-bold text-slate-300 flex-shrink-0 mt-0.5";
+        letter.textContent = String.fromCharCode(65 + idx);
+
+        const textSpan = document.createElement('span');
+        textSpan.className = "text-slate-200 text-sm md:text-base";
+        textSpan.textContent = opt.text;
+
+        btn.appendChild(letter);
+        btn.appendChild(textSpan);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function selectOption(idx) {
+      if (selectedOptionIdx !== null) return;
+      selectedOptionIdx = idx;
+
+      const q = currentQuestions[currentQuestionIdx];
+      const selectedOpt = q.options[idx];
+      const optionButtons = document.getElementById('options-container').children;
+
+      if (selectedOpt.isCorrect) {
+        score++;
+        optionButtons[idx].classList.remove('bg-slate-900', 'border-slate-700');
+        optionButtons[idx].classList.add('bg-emerald-950/80', 'border-emerald-500', 'text-emerald-200');
+        showRationale(true, selectedOpt.rationale);
+      } else {
+        optionButtons[idx].classList.remove('bg-slate-900', 'border-slate-700');
+        optionButtons[idx].classList.add('bg-rose-950/80', 'border-rose-500', 'text-rose-200');
+        
+        q.options.forEach((opt, i) => {
+          if (opt.isCorrect) {
+            optionButtons[i].classList.remove('bg-slate-900', 'border-slate-700');
+            optionButtons[i].classList.add('bg-emerald-950/40', 'border-emerald-600/60');
+          }
+        });
+        showRationale(false, selectedOpt.rationale);
+      }
+
+      document.getElementById('next-btn').disabled = false;
+    }
+
+    function showRationale(isCorrect, text) {
+      const box = document.getElementById('rationale-box');
+      box.classList.remove('hidden');
+      if (isCorrect) {
+        box.classList.add('bg-emerald-950/40', 'border-emerald-600/50', 'text-emerald-200');
+        box.innerHTML = `<strong>Resposta Correta!</strong> ${text}`;
+      } else {
+        box.classList.add('bg-rose-950/40', 'border-rose-600/50', 'text-rose-200');
+        box.innerHTML = `<strong>Resposta Incorreta.</strong> ${text}`;
+      }
+    }
+
+    function nextQuestion() {
+      currentQuestionIdx++;
+      if (currentQuestionIdx < currentQuestions.length) {
+        loadQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      document.getElementById('quiz-container').classList.add('hidden');
+      document.getElementById('progress-text').classList.add('hidden');
+      
+      const resultContainer = document.getElementById('result-container');
+      resultContainer.classList.remove('hidden');
+
+      document.getElementById('final-score').textContent = `${score} / ${currentQuestions.length}`;
+
+      const feedback = document.getElementById('score-feedback');
+      const percentage = (score / currentQuestions.length) * 100;
+
+      if (percentage >= 80) {
+        feedback.textContent = "Excelente! Dominou o conteúdo de HTML, CSS e Personas. Estás muito bem preparado para a prova!";
+      } else if (percentage >= 50) {
+        feedback.textContent = "Bom trabalho! Compreendeste a maioria dos conceitos, mas vale a pena dar uma revisada nos pontos em que erraste.";
+      } else {
+        feedback.textContent = "Recomendamos revisar as folhas de referência e as explicações do material antes de fazer a prova oficial.";
+      }
+    }
+
+    function restartQuiz() {
+      document.getElementById('result-container').classList.add('hidden');
+      document.getElementById('progress-text').classList.remove('hidden');
+      document.getElementById('quiz-container').classList.remove('hidden');
+      initQuiz();
+    }
+
+    initQuiz();
+  </script>
+</body>
+</html>
